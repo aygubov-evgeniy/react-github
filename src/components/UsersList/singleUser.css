@@ -1,0 +1,31 @@
+.SingleUser{
+  padding: 15px 0;
+  box-shadow: 0 0 3px 1px rgba(204, 204, 204, 0.7);
+}
+.SingleUser img{
+  border-radius: 50%;
+  max-width: 100px;
+}
+.SingleUser h1{
+  font-size: 20px;
+}
+.SingleUser p{
+  font-size: 13px;
+  margin-bottom: 5px;
+}
+.SingleUser time{
+  font-size: 13px;
+  color: #949393;
+}
+.SingleUser .row{
+  align-items: center;
+}
+
+@media(max-width: 767px) {
+  .SingleUser{
+    text-align: center;
+  }
+  .SingleUser img{
+    margin-bottom: 10px;
+  }
+}

@@ -1,48 +1,63 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Pagination from 'react-bootstrap/Pagination';
-import { useFetch } from "../../hooks";
+import parseLinkHeader from 'parse-link-header';
 
+import './userList.css';
 import Table from 'react-bootstrap/Table';
 import TableRow from './TableRow.js';
 
+const URL_ALL_USERS = 'https://api.github.com/users';
+
 const UsersList = () => {
-  const URL_ALL_USERS = 'https://api.github.com/users';
-  const USERS_PER_PAGE = 10;
-  const [data, loading] = useFetch(URL_ALL_USERS);
+  const [data, setData] = useState(null);
+  const [currentSince, setCurrentSince] = useState(null);
+  const [nextSince, setNextSince] = useState(null);
 
-  const handlePaginate = (number) => (
-    // if(number === 1) {
-    //   return data.slice(0, 2)
-    // }
+  useEffect(() => {
+    const loadUsers = async () => {
+      const response = await fetch(`${URL_ALL_USERS}${currentSince != null ? `?since=${currentSince}` : ''}`);
+      const json = await response.json();
+      const linkHeader = response.headers.get('link');
+      const linkData = parseLinkHeader(linkHeader);
+      
+      if ('next' in linkData) {
+        setNextSince(linkData.next.since);
+      }
 
-    data.map(({id, avatar_url, login, html_url}, index) => (
-      <TableRow key={id} avatar_url={avatar_url} login={login} html_url={html_url} />
-    ))
-  )
+      setData(json);
+    }
 
-  let active = 1;
-  let items = [];
-  for (let number = 1; number <= 5; number++) {
-    items.push(
-      <Pagination.Item key={number} active={number === active} onClick={() => handlePaginate(number)}>
-        {number}
-      </Pagination.Item>,
+    setNextSince(null);
+    loadUsers();
+  }, [currentSince]);
+
+  const renderTable = () => {
+    if (!data) {
+      return 'Loading...';
+    }
+
+    return (
+      <Table responsive striped bordered hover className="usersList">
+        <tbody>
+          {data.map(({id, avatar_url, login, html_url}) => (
+            <TableRow key={id} avatar_url={avatar_url} login={login} html_url={html_url} />
+          ))}
+        </tbody>
+      </Table>
     );
-  }
+  };
 
-  const paginationBasic = (
-    <Pagination>{items}</Pagination>
+  const renderPagination = () => (
+    <Pagination>
+      <Pagination.First onClick={() => setCurrentSince(null)} disabled={currentSince === null} />
+      <Pagination.Next onClick={() => setCurrentSince(nextSince)} disabled={nextSince === null} />
+    </Pagination>
   );
 
   return(
     <>
-    <Table responsive>
-      <tbody>
-        {loading ? ('Loading...') : handlePaginate()}
-      </tbody>
-    </Table>
-
-    {paginationBasic}
+      {renderTable()}
+      {renderPagination()}
     </>
   )
 }
